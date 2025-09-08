@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Juego de Amor ❤️</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #ff9a9e 0%, #fad0c4 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            cursor: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABFklEQVRYR+2X0QmDMBBF32oHcRFHcRRHcZQO4iiO4iiO4iiO4iheXhJfQkzUJv6p5QcBQe7d+3LzEoUJj2qC2b8FqAFN4AJsgQbQBrrAEXgCb+AB3ICrMaaX3QHwBpzGpJ4BZ2PMK/4QOADnGcQK2Bhj3vEHwB64zCDWwM4Y8/ELsAXuM4gtsDXGvPwCbIDHDGILbIwxT78Aa+A5g9gBG2PMyy/ACnjNIPbA2hjz9guwBF4ziAOwNsa8/QIsgNcM4gisjDFvvwBz4D2DOAFrY8zbL8AMeM8gzsDaGPP2CzAF3jOIC7Axxrz9AkyA9wziCmyMMW+/AGPgM4O4AVtjzNsvwAj4zCDuwM4Y8/ELMADeM4gHsDfGfPwC9IH3DOIP7Z0xYvV0Rj4AAAAASUVORK5CYII='), auto;
+        }
+
+        #gameContainer {
+            position: relative;
+            width: 800px;
+            height: 600px;
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+        }
+
+        #gameCanvas {
+            width: 100%;
+            height: 100%;
+        }
+
+        #startScreen, #messageScreen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.9);
+            z-index: 10;
+            text-align: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        #messageScreen {
+            display: none;
+            background: rgba(255, 255, 255, 0.95);
+        }
+
+        h1 {
+            color: #ff6b6b;
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        button {
+            background-color: #ff6b6b;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 50px;
+            font-size: 1.2em;
+            cursor: pointer;
+            margin: 10px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4);
+        }
+
+        button:hover {
+            background-color: #ff5252;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 107, 107, 0.5);
+        }
+
+        #score {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            font-size: 1.5em;
+            color: #ff6b6b;
+            font-weight: bold;
+            z-index: 5;
+        }
+
+        #timer {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 1.5em;
+            color: #ff6b6b;
+            font-weight: bold;
+            z-index: 5;
+        }
+
+        #messageContent {
+            max-width: 80%;
+            line-height: 1.6;
+            margin: 20px 0;
+        }
+
+        .heart {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23ff6b6b"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>');
+            background-size: contain;
+            background-repeat: no-repeat;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .heart:hover {
+            transform: scale(1.2);
+        }
+
+        .character {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23ff6b6b"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>');
+            background-size: contain;
+            background-repeat: no-repeat;
+            z-index: 2;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+            100% { transform: translateY(0px); }
+        }
+
+        .floating {
+            animation: float 3s ease-in-out infinite;
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <div id="score">Corazones: <span id="scoreValue">0</span></div>
+        <div id="timer">Tiempo: <span id="timeValue">60</span>s</div>
+        
+        <div id="startScreen">
+            <h1>❤️ Juego de Amor ❤️</h1>
+            <p>¡Recoge corazones para descubrir mensajes especiales!</p>
+            <p>Usa el ratón para moverte y haz clic en los corazones para recolectarlos.</p>
+            <p>¡Tienes 60 segundos para recolectar tantos corazones como puedas!</p>
+            <button id="startButton">¡Comenzar Juego!</button>
+        </div>
+
+        <div id="messageScreen">
+            <h1 id="messageTitle">¡Mensaje Especial!</h1>
+            <div id="messageContent"></div>
+            <button id="continueButton">Continuar</button>
+        </div>
+
+        <canvas id="gameCanvas"></canvas>
+    </div>
+
+    <script>
+        // Game variables
+        let score = 0;
+        let timeLeft = 60;
+        let gameInterval;
+        let timerInterval;
+        let messages = [
+            "Eres la persona más especial en mi vida ❤️",
+            "Tu sonrisa ilumina mis días más oscuros ✨",
+            "Cada momento a tu lado es un regalo que atesoro 💝",
+            "Eres mi razón para sonreír cada día 😊",
+            "Nada me hace más feliz que verte feliz 💖",
+            "Eres mi sueño hecho realidad 🌟",
+            "Mi corazón late más fuerte por ti 💓",
+            "Eres perfecta tal como eres 💕",
+            "No hay nadie como tú en este mundo 🌎",
+            "Eres mi mayor bendición 🙏"
+        ];
+        let usedMessages = [];
+        
+        // DOM elements
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const startScreen = document.getElementById('startScreen');
+        const messageScreen = document.getElementById('messageScreen');
+        const scoreElement = document.getElementById('scoreValue');
+        const timeElement = document.getElementById('timeValue');
+        const messageTitle = document.getElementById('messageTitle');
+        const messageContent = document.getElementById('messageContent');
+        const startButton = document.getElementById('startButton');
+        const continueButton = document.getElementById('continueButton');
+
+        // Set canvas size
+        function resizeCanvas() {
+            const container = document.getElementById('gameContainer');
+            canvas.width = container.clientWidth;
+            canvas.height = container.clientHeight;
+        }
+
+        // Game objects
+        const player = {
+            x: 100,
+            y: 100,
+            size: 30,
+            color: '#ff6b6b',
+            speed: 5,
+            draw() {
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size / 2, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Draw heart on the player
+                ctx.fillStyle = 'white';
+                ctx.font = '20px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText('❤️', this.x, this.y);
+            },
+            move(x, y) {
+                this.x = x;
+                this.y = y;
+                
+                // Keep player within bounds
+                if (this.x < this.size / 2) this.x = this.size / 2;
+                if (this.x > canvas.width - this.size / 2) this.x = canvas.width - this.size / 2;
+                if (this.y < this.size / 2) this.y = this.size / 2;
+                if (this.y > canvas.height - this.size / 2) this.y = canvas.height - this.size / 2;
+            }
+        };
+
+        let hearts = [];
+        let lastHeartTime = 0;
+        const heartSpawnRate = 1000; // milliseconds
+
+        // Game functions
+        function spawnHeart() {
+            const size = Math.random() * 20 + 20;
+            const x = Math.random() * (canvas.width - size * 2) + size;
+            const y = Math.random() * (canvas.height - size * 2) + size;
+            
+            hearts.push({
+                x,
+                y,
+                size,
+                color: `hsl(${Math.random() * 60 + 330}, 100%, 70%)`,
+                rotation: Math.random() * Math.PI * 2,
+                rotationSpeed: (Math.random() - 0.5) * 0.1
+            });
+        }
+
+        function drawHearts() {
+            hearts.forEach((heart, index) => {
+                ctx.save();
+                ctx.translate(heart.x, heart.y);
+                ctx.rotate(heart.rotation);
+                
+                // Draw heart shape
+                ctx.fillStyle = heart.color;
+                ctx.beginPath();
+                const size = heart.size / 2;
+                ctx.moveTo(0, -size / 2);
+                ctx.bezierCurveTo(
+                    size / 2, -size,
+                    size, -size / 2,
+                    0, size / 2
+                );
+                ctx.bezierCurveTo(
+                    -size, -size / 2,
+                    -size / 2, -size,
+                    0, -size / 2
+                );
+                ctx.fill();
+                
+                ctx.restore();
+                
+                // Update rotation
+                heart.rotation += heart.rotationSpeed;
+            });
+        }
+
+        function showLoveMessage() {
+            const message = document.querySelector('.love-message');
+            message.style.display = 'block';
+            message.style.opacity = '1';
+            
+            // Hide the message after 2 seconds
+            setTimeout(() => {
+                message.style.opacity = '0';
+                setTimeout(() => {
+                    message.style.display = 'none';
+                }, 500);
+            }, 2000);
+        }
+
+        function checkCollisions() {
+            for (let i = hearts.length - 1; i >= 0; i--) {
+                const heart = hearts[i];
+                const dx = player.x - heart.x;
+                const dy = player.y - heart.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                
+                if (distance < 30) { // Collision detected
+                    // Remove the heart
+                    hearts.splice(i, 1);
+                    // Increase score
+                    score += 1;
+                    document.getElementById('scoreValue').textContent = score;
+                    
+                    // Show love message
+                    showLoveMessage();
+                    
+                    // Play sound if available
+                    if (clickSound) {
+                        clickSound.currentTime = 0;
+                        clickSound.play().catch(e => console.log('Audio play failed:', e));
+                    }
+                }
+            }
+        }
+
+        function showRandomMessage() {
+            // If we've used all messages, reset the used messages array
+            if (usedMessages.length === messages.length) {
+                usedMessages = [];
+            }
+            
+            // Find a message that hasn't been used yet
+            let availableMessages = messages.filter((_, index) => !usedMessages.includes(index));
+            let randomIndex = Math.floor(Math.random() * availableMessages.length);
+            let messageIndex = messages.indexOf(availableMessages[randomIndex]);
+            
+            // Mark this message as used
+            usedMessages.push(messageIndex);
+            
+            // Show the message
+            messageTitle.textContent = `¡${score} Corazones Recolectados!`;
+            messageContent.textContent = messages[messageIndex];
+            
+            // Pause the game and show the message screen
+            clearInterval(gameInterval);
+            clearInterval(timerInterval);
+            messageScreen.style.display = 'flex';
+        }
+
+        function update() {
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Spawn new hearts
+            const currentTime = Date.now();
+            if (currentTime - lastHeartTime > heartSpawnRate && hearts.length < 10) {
+                spawnHeart();
+                lastHeartTime = currentTime;
+            }
+            
+            // Draw and update game objects
+            drawHearts();
+            player.draw();
+            checkCollisions();
+        }
+
+        function updateTimer() {
+            timeLeft--;
+            timeElement.textContent = timeLeft;
+            
+            if (timeLeft <= 0) {
+                endGame();
+            }
+        }
+
+        function endGame() {
+            clearInterval(gameInterval);
+            clearInterval(timerInterval);
+            
+            // Show final message
+            messageTitle.textContent = '¡Juego Terminado!';
+            messageContent.innerHTML = `
+                <p>¡Recolectaste ${score} corazones!</p>
+                <p>${getFinalMessage(score)}</p>
+                <p>¡Gracias por jugar, mi amor!</p>
+            `;
+            messageScreen.style.display = 'flex';
+        }
+
+        function getFinalMessage(score) {
+            if (score >= 50) return '¡Eres increíble! Mi amor por ti es infinito. ❤️';
+            if (score >= 30) return '¡Impresionante! Eres el amor de mi vida. 💖';
+            if (score >= 20) return '¡Buen trabajo! Eres muy especial para mí. 💕';
+            if (score >= 10) return '¡Bien hecho! Te quiero mucho. 😊';
+            return '¡Sigue intentándolo! Te amo de todos modos. 💝';
+        }
+
+        function startGame() {
+            // Reset game state
+            score = 0;
+            timeLeft = 60;
+            hearts = [];
+            usedMessages = [];
+            scoreElement.textContent = '0';
+            timeElement.textContent = '60';
+            
+            // Position player in the center
+            player.x = canvas.width / 2;
+            player.y = canvas.height / 2;
+            
+            // Start game loop
+            gameInterval = setInterval(update, 1000 / 60); // 60 FPS
+            timerInterval = setInterval(updateTimer, 1000);
+            
+            // Hide start screen
+            startScreen.style.display = 'none';
+        }
+
+        // Event listeners
+        window.addEventListener('resize', () => {
+            resizeCanvas();
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            player.move(e.clientX - rect.left, e.clientY - rect.top);
+        });
+
+        canvas.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            const rect = canvas.getBoundingClientRect();
+            const touch = e.touches[0];
+            player.move(touch.clientX - rect.left, touch.clientY - rect.top);
+        }, { passive: false });
+
+        startButton.addEventListener('click', () => {
+            startGame();
+        });
+
+        continueButton.addEventListener('click', () => {
+            messageScreen.style.display = 'none';
+            
+            // Resume the game
+            gameInterval = setInterval(update, 1000 / 60);
+            timerInterval = setInterval(updateTimer, 1000);
+        });
+
+        // Initialize game
+        resizeCanvas();
+        
+        // Add click sound
+        const clickSound = new Audio('data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YU' + 'A'.repeat(1000));
+        
+        // Make buttons play sound on click
+        document.querySelectorAll('button').forEach(button => {
+            button.addEventListener('click', () => {
+                clickSound.currentTime = 0;
+                clickSound.play().catch(e => console.log('Audio play failed:', e));
+            });
+        });
+    </script>
+    <style>
+        @keyframes float {
+            0% { transform: translateX(-50%) translateY(0); }
+            50% { transform: translateX(-50%) translateY(-20px); }
+            100% { transform: translateX(-50%) translateY(0); }
+        }
+        .love-message {
+            position: fixed;
+            bottom: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 4em;
+            color: #ff6b6b;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            text-align: center;
+            line-height: 1.2;
+            z-index: 1000;
+            display: none;
+            opacity: 0;
+            transition: all 0.5s ease-in-out;
+            pointer-events: none;
+            white-space: nowrap;
+            width: 100%;
+        }
+        .love-message {
+            animation: float 2s ease-in-out infinite;
+        }
+    </style>
+    <div class="love-message">
+        Te Amo Kayta ❤️
+    </div>
+</body>
+</html>
